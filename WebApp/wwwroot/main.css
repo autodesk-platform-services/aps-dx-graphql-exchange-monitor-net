@@ -1,0 +1,821 @@
+/* HUD style of the Exchange Watcher sample (panel shapes, grid, buttons), in a light palette */
+
+:root {
+    --bg: #ede3da;
+    --panel: #ffffff;
+    --panel-2: #f8f0e8;
+    --edge: #a8826a;
+    --edge-rgb: 168,130,106;
+    --text: #3d2a1f;
+    --dim: #7a5236;
+    --accent: #b04a08;
+    --accent-rgb: 176,74,8;
+    --bright: #2b170c;
+    --danger: #a50e2d;
+    --font: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --gap: 14px;
+    --header-height: 96px;
+    --sidebar-width: 320px; /* Overridden by layout.js */
+    --grid:
+        linear-gradient(rgba(var(--edge-rgb),.16) 1px, transparent 1px) 0 0 / 34px 34px,
+        linear-gradient(90deg, rgba(var(--edge-rgb),.16) 1px, transparent 1px) 0 0 / 34px 34px,
+        linear-gradient(160deg, var(--panel), var(--panel-2));
+}
+
+body.sidebar-collapsed, body.no-sidebar {
+    --sidebar-width: 0px;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    color: var(--text);
+    font-family: var(--font);
+    background:
+        radial-gradient(ellipse at 30% 0%, #fcf7f2 0%, transparent 60%),
+        var(--bg);
+}
+
+/* Panels: muted glass with a faint grid, hatch ticks top-left and a crosshair bottom-right */
+
+.hud-panel {
+    position: absolute;
+    box-sizing: border-box;
+    background: var(--grid);
+    border: 2px solid var(--edge);
+    box-shadow: inset 0 0 30px rgba(var(--edge-rgb),.12), 0 2px 10px rgba(43,23,12,.10);
+}
+
+.hud-panel::before { /* top-left hatch ticks */
+    content: "";
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    width: 70px;
+    height: 10px;
+    background: repeating-linear-gradient(115deg, var(--edge) 0 4px, transparent 4px 9px);
+    opacity: .8;
+}
+
+.hud-panel::after { /* bottom-right crosshair */
+    content: "+";
+    position: absolute;
+    right: 12px;
+    bottom: 4px;
+    color: var(--edge);
+    font-size: 20px;
+}
+
+/* Cut-corner panel: the element is the border colour, ::before is the inset face.
+   Both use 45deg cuts, so the inner cut is 40px - 1.17px for a 2px border. */
+.hud-panel.cut {
+    isolation: isolate;
+    border: 0;
+    background: var(--edge);
+    clip-path: polygon(0 0, calc(100% - 40px) 0, 100% 40px, 100% 100%, 40px 100%, 0 calc(100% - 40px));
+}
+
+.hud-panel.cut::before {
+    inset: 2px;
+    width: auto;
+    height: auto;
+    z-index: -1;
+    opacity: 1;
+    background: var(--grid);
+    box-shadow: inset 0 0 30px rgba(var(--edge-rgb),.12);
+    clip-path: polygon(0 0, calc(100% - 38.83px) 0, 100% 38.83px, 100% 100%, 38.83px 100%, 0 calc(100% - 38.83px));
+}
+
+.hud-panel.cut::after {
+    content: "";
+    top: 8px;
+    left: 12px;
+    right: auto;
+    bottom: auto;
+    width: 70px;
+    height: 10px;
+    background: repeating-linear-gradient(115deg, var(--edge) 0 4px, transparent 4px 9px);
+}
+
+h1, h2, h3 {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 800;
+    color: var(--bright);
+    text-shadow: 0 1px 0 #fff;
+}
+
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1rem; margin-bottom: 10px; }
+h3 { font-size: .8rem; color: var(--accent); margin: 16px 0 6px; }
+
+/* Buttons and links */
+
+button {
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text);
+    background: rgba(255,255,255,.75);
+    border: 1px solid var(--edge);
+    padding: 5px 12px;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+button:hover:not(:disabled) {
+    background: rgba(var(--accent-rgb),.12);
+    color: var(--accent);
+}
+
+button:disabled {
+    cursor: default;
+    opacity: .4;
+}
+
+button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+button.primary:hover:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+    filter: brightness(1.15);
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 12px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+code {
+    background: rgba(var(--edge-rgb),.15);
+    padding: 1px 5px;
+    border: 1px solid rgba(var(--edge-rgb),.5);
+    color: var(--accent);
+}
+
+/* Layout: header on top, sidebar (resizable, see layout.js) and main panel below, separated by gaps */
+
+#header {
+    top: var(--gap);
+    left: var(--gap);
+    right: var(--gap);
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 60px 0 24px; /* Keep the actions clear of the cut corner */
+}
+
+#header .logo {
+    height: 34px;
+    opacity: .9;
+}
+
+#header .title {
+    margin-right: auto;
+}
+
+#header .tag {
+    font-size: 10px;
+    letter-spacing: .25em;
+    color: var(--dim);
+    margin-bottom: 4px;
+}
+
+#header .sub {
+    margin-top: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--dim);
+}
+
+#header .sub b {
+    color: var(--accent);
+}
+
+#header nav {
+    display: flex;
+    gap: 18px;
+}
+
+#header nav a[aria-current="page"] {
+    color: var(--bright);
+    font-weight: 800;
+    border-bottom: 2px solid var(--accent);
+}
+
+#sidebar-toggle {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    padding: 0;
+    font-size: 16px;
+}
+
+#sidebar-toggle::before {
+    content: "\00bb"; /* » */
+}
+
+body:not(.sidebar-collapsed) #sidebar-toggle::before {
+    content: "\00ab"; /* « */
+}
+
+#sidebar {
+    left: var(--gap);
+    width: calc(var(--sidebar-width) - var(--gap));
+    top: calc(var(--header-height) + 2 * var(--gap));
+    bottom: var(--gap);
+    padding: 24px 12px 28px;
+    overflow: auto;
+    scrollbar-color: var(--edge) transparent;
+}
+
+body.sidebar-collapsed #sidebar {
+    display: none;
+}
+
+/* The splitter fills the gap between the sidebar and the main panel, so the sidebar edge follows the pointer */
+#splitter {
+    position: absolute;
+    left: var(--sidebar-width);
+    width: var(--gap);
+    top: calc(var(--header-height) + 2 * var(--gap));
+    bottom: var(--gap);
+    z-index: 10;
+    cursor: col-resize;
+    touch-action: none;
+}
+
+#splitter::after {
+    content: '';
+    position: absolute;
+    left: calc(var(--gap) / 2);
+    width: 1px;
+    top: 0;
+    bottom: 0;
+    background: rgba(var(--edge-rgb),.35);
+}
+
+#splitter:hover::after, body.sidebar-resizing #splitter::after {
+    left: calc(var(--gap) / 2 - 1px);
+    width: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(var(--accent-rgb),.5);
+}
+
+body.sidebar-resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+#main, #preview-frame {
+    left: calc(var(--sidebar-width) + var(--gap));
+    right: var(--gap);
+    top: calc(var(--header-height) + 2 * var(--gap));
+    bottom: var(--gap);
+}
+
+#main {
+    padding: 34px 30px 36px;
+    overflow: auto;
+    scrollbar-color: var(--edge) transparent;
+}
+
+#main > .content {
+    max-width: 1100px;
+}
+
+#main > .content.wide {
+    max-width: none;
+}
+
+@media (max-width: 768px) {
+    #header .logo, #header .tag {
+        display: none;
+    }
+    #sidebar {
+        width: auto;
+        right: var(--gap);
+        bottom: 55%;
+    }
+    #splitter {
+        display: none;
+    }
+    #main, #preview-frame {
+        left: var(--gap);
+        top: 47%;
+    }
+    body.sidebar-collapsed #main, body.sidebar-collapsed #preview-frame, body.no-sidebar #main {
+        top: calc(var(--header-height) + 2 * var(--gap));
+    }
+}
+
+/* Tree (Inspire Tree light theme) */
+
+#sidebar .sidebar-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+#sidebar .sidebar-title h2 {
+    margin-bottom: 0;
+}
+
+#tree .inspire-tree .title {
+    color: var(--text);
+    font-size: 13px;
+}
+
+#tree .inspire-tree .title-wrap:hover + .wholerow,
+#tree .inspire-tree .wholerow:hover {
+    background-color: rgba(var(--accent-rgb),.07);
+}
+
+#tree .inspire-tree .selected > .title-wrap:hover + .wholerow,
+#tree .inspire-tree .selected > .wholerow,
+#tree .inspire-tree .selected > .wholerow:hover {
+    background-color: rgba(var(--accent-rgb),.15);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
+#tree .inspire-tree .selected > .title-wrap .title {
+    color: var(--bright);
+}
+
+#tree .inspire-tree .focused > .wholerow {
+    border: 1px dotted var(--edge);
+}
+
+#tree .inspire-tree .icon-expand:before,
+#tree .inspire-tree .icon-collapse:before {
+    background-color: transparent;
+}
+
+/* Tone the black octicons down to the text colour */
+#tree .inspire-tree .title.icon:before {
+    opacity: .75;
+}
+
+.icon-hub:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/apps-16.svg);
+    background-size: cover;
+}
+
+.icon-project:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/project-16.svg);
+    background-size: cover;
+}
+
+.icon-my-folder:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/file-directory-16.svg);
+    background-size: cover;
+}
+
+.icon-revit:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/home-16.svg);
+    background-size: cover;
+}
+
+.icon-exchange:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/package-16.svg);
+    background-size: cover;
+}
+
+.icon-info:before {
+    background-image: url(https://raw.githubusercontent.com/primer/octicons/main/icons/info-16.svg);
+    background-size: cover;
+    opacity: 0.5;
+}
+
+/* The viewer sits inside the frame, leaving room for the hatch ticks and the crosshair */
+
+#preview {
+    position: absolute;
+    top: 22px;
+    left: 10px;
+    right: 10px;
+    bottom: 26px;
+    outline: 1px solid rgba(var(--edge-rgb),.5);
+}
+
+/* Placeholder over the viewer until a design is picked (same position as #preview) */
+#viewer-placeholder {
+    position: absolute;
+    top: 22px;
+    left: 10px;
+    right: 10px;
+    bottom: 26px;
+    z-index: 5; /* Above the viewer canvas and its toolbar */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px;
+    text-align: center;
+    background: var(--grid);
+    outline: 1px solid rgba(var(--edge-rgb),.5);
+}
+
+#viewer-placeholder .placeholder-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--bright);
+}
+
+#viewer-placeholder .placeholder-text {
+    max-width: 360px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--dim);
+}
+
+/* Monitor setup: a floating dialog over the viewer, moved by its title (see main.js) */
+
+#monitor-dialog {
+    position: absolute;
+    top: 40px;
+    right: 28px;
+    z-index: 20; /* Above the placeholder and the viewer */
+    box-sizing: border-box;
+    width: 400px;
+    max-width: calc(100% - 40px);
+    max-height: calc(100% - 80px);
+    display: flex;
+    flex-direction: column;
+    background: var(--grid);
+    border: 2px solid var(--edge);
+    box-shadow: inset 0 0 30px rgba(var(--edge-rgb),.12), 0 4px 16px rgba(15,43,23,.25);
+}
+
+#dialog-handle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px 8px 14px;
+    cursor: move;
+    touch-action: none;
+    user-select: none;
+    border-bottom: 1px solid rgba(var(--edge-rgb),.45);
+}
+
+#dialog-handle h2 {
+    margin: 0;
+}
+
+#dialog-toggle {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+}
+
+#dialog-body {
+    padding: 12px 14px 14px;
+    overflow: auto;
+    scrollbar-color: var(--edge) transparent;
+}
+
+#monitor-dialog.collapsed #dialog-body {
+    display: none;
+}
+
+#monitor-dialog.collapsed #dialog-handle {
+    border-bottom: 0;
+}
+
+#monitor-dialog .pick {
+    grid-template-columns: 90px 1fr;
+}
+
+.open {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 10px;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: rgba(var(--accent-rgb),.08);
+    border: 1px solid var(--accent);
+}
+
+.open .label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--dim);
+}
+
+.open .value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bright);
+    overflow-wrap: anywhere;
+}
+
+#monitor-dialog .hint {
+    margin-bottom: 10px;
+}
+
+#monitor-dialog .field {
+    margin-top: 12px;
+}
+
+/* Setup pick rows */
+
+.lead {
+    margin: 0 0 22px;
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--dim);
+}
+
+.pick {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    background: rgba(255,255,255,.6);
+    border: 1px solid rgba(var(--edge-rgb),.5);
+    border-left: 3px solid var(--edge);
+}
+
+.pick.set {
+    border-left-color: var(--accent);
+}
+
+.pick .label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--dim);
+}
+
+.pick .value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bright);
+    overflow-wrap: anywhere;
+}
+
+.pick .value.empty {
+    font-weight: 400;
+    color: var(--dim);
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+    margin: 18px 0 8px;
+}
+
+.field label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--dim);
+}
+
+.field input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: rgba(255,255,255,.85);
+    border: 1px solid var(--edge);
+    outline: none;
+}
+
+.field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb),.2);
+}
+
+.hint {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--dim);
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.status {
+    min-height: 1.4em;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.status.error {
+    color: var(--danger);
+}
+
+.status.ok {
+    color: var(--accent);
+}
+
+.registered {
+    margin-top: 26px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(var(--edge-rgb),.5);
+}
+
+/* Tables (received payloads, changes) */
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+}
+
+th, td {
+    border-bottom: 1px solid rgba(var(--edge-rgb),.4);
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+thead th {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-size: 11px;
+    border-bottom: 2px solid var(--edge);
+}
+
+tbody tr:hover td {
+    background: rgba(var(--accent-rgb),.06);
+}
+
+tr.detail td {
+    background: rgba(var(--edge-rgb),.1);
+    border-left: 2px solid var(--accent);
+    padding: 14px 18px;
+}
+
+/* Fixed layout: column widths come from the th/table width, not from the longest value */
+tr.detail table {
+    table-layout: fixed;
+}
+
+tr.detail table th {
+    color: var(--dim);
+    font-weight: 600;
+    width: 220px;
+    white-space: nowrap;
+}
+
+.val {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 4px;
+}
+
+pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 12px;
+    font-family: ui-monospace, Menlo, monospace;
+    color: var(--text);
+}
+
+.tabs {
+    margin-bottom: 8px;
+}
+
+.empty {
+    color: var(--dim);
+    padding: 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+}
+
+/* /change: details of the webhook call */
+
+.details {
+    margin: 0 0 14px;
+    padding: 14px 18px;
+    background: rgba(var(--edge-rgb),.1);
+    border-left: 2px solid var(--accent);
+}
+
+/* Fixed layout: column widths come from the th/table width, not from the longest value */
+.details table {
+    table-layout: fixed;
+}
+
+.details th {
+    color: var(--dim);
+    font-weight: 600;
+    width: 220px;
+    white-space: nowrap;
+}
+
+/* /change: the verdict above the table */
+
+.verdict {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 14px 0;
+    padding: 14px 18px;
+    border: 1px solid var(--edge);
+    border-left-width: 5px;
+    background: rgba(255,255,255,.7);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.verdict.nothing {
+    border-left-color: var(--edge);
+}
+
+.verdict.changed {
+    border-left-color: var(--accent);
+    color: var(--bright);
+}
+
+.verdict.error {
+    border-left-color: var(--danger);
+    color: var(--danger);
+}
+
+.banner#session-expired {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    margin: 0;
+    background: var(--panel);
+    box-shadow: 0 4px 16px rgba(0,0,0,.25);
+}
+
+.banner {
+    margin: 10px 0;
+    padding: 10px 14px;
+    font-size: 13px;
+    background: rgba(var(--accent-rgb),.1);
+    border: 1px solid var(--accent);
+}
+
+.op {
+    display: inline-block;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    border: 1px solid var(--edge);
+}
+
+.op.INSERT { color: #1d7a3e; border-color: #1d7a3e; } /* Fixed colors: green, blue, red read as insert, modify, delete whatever the accent */
+.op.MODIFY { color: #1f5d99; border-color: #1f5d99; }
+.op.DELETE { color: var(--danger); border-color: var(--danger); }
+
+.unnamed {
+    color: var(--dim);
+    font-style: italic;
+}
+
+[hidden] {
+    display: none !important;
+}
