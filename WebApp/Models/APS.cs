@@ -15,6 +15,8 @@ public partial class APS
     private readonly string _clientId;
     private readonly string _clientSecret;
     private readonly string _callbackUri;
+    // Not a secret: it is also in every sign-in URL. Shown by the help dialog, to provision the app in ACC
+    public string ClientId => _clientId;
     // Browsing ACC, listing and registering webhooks (data:read), deleting them (data:read and data:write), querying
     // exchanges (data:read), and the Viewer (viewables:read)
     private readonly List<Scopes> InternalTokenScopes = [Scopes.DataRead, Scopes.DataWrite, Scopes.ViewablesRead];

@@ -46,34 +46,28 @@ public partial class APS
         return result["data"];
     }
 
-    // Data Exchange IDs are base64-encoded strings such as "fold~<hub>~<project>~<folder>", built from the Data Management IDs
-    private static IEnumerable<string> DataExchangeIdCandidates(params string[] parts)
+    // Data Exchange IDs are base64-encoded strings such as "fold~<hub>~<project>~<folder>", built from the Data Management IDs.
+    // For ACC IDs the encoding never needs padding or the characters where standard and URL-safe base64 differ, so any
+    // base64 encoder gives the same ID
+    private static string DataExchangeId(params string[] parts)
     {
-        var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Join("~", parts)));
-        return new[] { base64.TrimEnd('=').Replace('+', '-').Replace('/', '_'), base64.TrimEnd('='), base64 }.Distinct();
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Join("~", parts)));
     }
 
     public async Task<string> GetDataExchangeFolderId(string hubId, string projectId, string folderId, string region, Tokens tokens)
     {
         const string query = "query GetFolder($folderId: ID!) { folder(folderId: $folderId) { id name } }";
-        var errors = new List<string>();
-        foreach (var candidate in DataExchangeIdCandidates("fold", hubId, projectId, folderId))
+        string id;
+        try
         {
-            try
-            {
-                var data = await QueryDataExchange("folder lookup", query, new JsonObject { ["folderId"] = candidate }, region, tokens);
-                var id = (string)data?["folder"]?["id"];
-                if (id != null)
-                {
-                    return id;
-                }
-            }
-            catch (Exception ex)
-            {
-                errors.Add(ex.Message);
-            }
+            var data = await QueryDataExchange("folder lookup", query, new JsonObject { ["folderId"] = DataExchangeId("fold", hubId, projectId, folderId) }, region, tokens);
+            id = (string)data?["folder"]?["id"];
         }
-        throw new ApplicationException($"Could not find the folder in the Data Exchange API. {string.Join(" ", errors.Distinct())}");
+        catch (Exception ex)
+        {
+            throw new ApplicationException($"Could not find the folder in the Data Exchange API. {ex.Message}");
+        }
+        return id ?? throw new ApplicationException("Could not find the folder in the Data Exchange API.");
     }
 
     // The exchange item in ACC has the name of the exchange, which is how it's found in the folder

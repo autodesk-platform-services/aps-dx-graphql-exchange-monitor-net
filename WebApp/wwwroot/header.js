@@ -1,7 +1,9 @@
 import { keepSessionAlive } from './session.js';
+import { initHelp } from './help.js';
 
 // Shows who is signed in and sets up the Login/Logout button of the header. Returns the user, or null if nobody is signed in.
 export async function initHeader() {
+    initHelp();
     const login = document.getElementById('login');
     const resp = await fetch('/api/auth/profile');
     if (resp.ok) {
